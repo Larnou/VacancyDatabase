@@ -1,55 +1,51 @@
 import json
 from typing import Any
 
+import Levenshtein
 import requests
 
 
 # Исправить код ниже
 class HeadHunterAPI:
     """
-    Класс HeadHunterAPI, обеспечивает связь с HH Api и получение списка вакансий с указанием ключевого слова.
+    Класс HeadHunterAPI, обеспечивает связь с HH Api и получение списка работадателей и их доступных вакансий.
 
     Attributes:
-        __API_URL: Базовый URL подключения к API
+        __API_EMPLOYERS_URL: Базовый URL подключения к API по работадателям.
+        __API_VACANCIES_URL: Базовый URL подключения к API по вакансиям.
     """
 
-    __API_URL = "https://api.hh.ru/vacancies"
-    __slots__ = ("__headers", "__params", "__vacancies")
+    __API_EMPLOYERS_URL = "https://api.hh.ru/employers"
+    __API_VACANCIES_URL = "https://api.hh.ru/vacancies"
 
     def __init__(self) -> None:
         """
         Создаёт объект HeadHunterAPI.
         """
-        self.__headers = {"User-Agent": "HH-User-Agent"}
-        self.__params = {"text": "", "page": 0, "per_page": 10}
-        self.__vacancies = []
 
-    def connect_to_api(self) -> requests.Response:
+    @staticmethod
+    def __connect_to_api(api: str, api_parameters: dict) -> list:
         """
-        Подключение к HH Api.
+        Получает список работадателей через подключение к HH Api.
 
-        Returns:
-            Response подключения API.
-        """
-        return requests.get(self.__API_URL, headers=self.__headers, params=self.__params)
-
-    def __get_vacancies_by_api(self) -> list[dict[Any, Any]]:
-        """
-        Получает список вакансий через подключение к HH Api.
+        Args:
+            api_parameters: Набор параметр для работы API.
 
         Returns:
-            Список вакансий
+            Список работадателей и информацию о них.
         """
+        headers = {"User-Agent": "HH-User-Agent"}
+
         try:
-            response = self.connect_to_api()
+            response = requests.get(api, headers=headers, params=api_parameters)
 
             # Проверка статус-кода ответа
             if response.status_code != 200:
-                print(f"Ошибка API: статус {response.status_code}")
+                print(f"Ошибка HH API: статус {response.status_code}")
                 return []
             else:
-                vacancies = response.json()["items"]
-                return vacancies
+                items_from_answer = response.json()["items"]
+                return items_from_answer
 
         except requests.exceptions.RequestException as e:
             print(f"Ошибка при запросе к API hh.ru: {e}")
@@ -58,19 +54,67 @@ class HeadHunterAPI:
             print(f"Ошибка обработки ответа API: {e}")
             return []
 
-    def get_vacancies(self, keyword: str) -> list[dict]:
+    def get_employer(self, employer_name: str) -> dict[str, Any] | None:
         """
-        Получение вакансий по заданному ключевому слову keyword.
+        Получает работадателя с названием наиболее подходящим по указанному имени employer_name.
 
         Args:
-            keyword: Ключевое слово, по которому будет проводиться поиск вакансий.
-        Returns:
-            Список вакансий, содержащих ключевое слово.
-        """
-        self.__params["text"] = keyword
-        while self.__params.get("page") != 1:
-            vacancies = self.__get_vacancies_by_api()
-            self.__vacancies.extend(vacancies)
-            self.__params["page"] += 1
+            employer_name: Имя работадателя или название компании.
 
-        return self.__vacancies
+        Returns:
+            Работадателя и информацию о нём.
+        """
+
+        api_parameters = {"text": employer_name, "area": 113, "only_with_vacancies": False, "per_page": 10, "page": 0}
+
+        # Список вакансий по ключевому слову
+        employers = self.__connect_to_api(api=self.__API_EMPLOYERS_URL, api_parameters=api_parameters)
+
+        if len(employers) > 0:
+            employer = max(employers, key=lambda x: Levenshtein.ratio(x.get("name"), employer_name))
+            employer["employer_vacancies"] = self.get_vacancies_from_employer(employer["id"])
+            return employer
+        else:
+            return None
+
+    def get_vacancies_from_employer(self, employer_id: str) -> list[dict[str, Any]]:
+        """
+        Получает список вакансий от определённого работадателя.
+
+        Args:
+            employer_id: ID работадателя или компании.
+
+        Returns:
+            Список вакансий по этому работадателю.
+        """
+
+        api_parameters = {"employer_id": employer_id, "per_page": 10, "page": 0}
+
+        # Список вакансий по ключевому слову
+        vacancies_list = []
+
+        while api_parameters["page"] != 2:
+            vacancies = self.__connect_to_api(api=self.__API_VACANCIES_URL, api_parameters=api_parameters)
+            vacancies_list.extend(vacancies)
+            api_parameters["page"] += 1
+
+        return vacancies_list
+
+    def get_list_of_employers(self, employers_name_list: list[str]) -> list[dict[str, Any]]:
+        """
+        Получает список работадателей из employers_name_list.
+
+        Args:
+            employers_name_list: Список работадателей.
+
+        Returns:
+            Список работадателей.
+        """
+        employers = []
+
+        for employer_name in employers_name_list:
+            employer = self.get_employer(employer_name)
+            if employer:
+                employers.append(employer)
+
+        return employers
