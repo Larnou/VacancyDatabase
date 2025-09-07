@@ -1,5 +1,7 @@
 from typing import Any
 
+from src.classes.vacancy import Vacancy
+
 
 class Employer:
     """
@@ -16,7 +18,7 @@ class Employer:
         self.vacancies = vacancies
 
     @staticmethod
-    def cast_to_object_list(dict_list: list[dict[str, Any]]) -> list:
+    def cast_to_object_list(dict_list: list[dict[str, Any]], rates_dict: dict) -> list:
         """
         Переводит список словарей в список объектов класса Employer.
 
@@ -29,11 +31,13 @@ class Employer:
         employers_list = []
 
         for employer in dict_list:
+            vacancies = Vacancy.cast_to_object_list(employer["employer_vacancies"], rates_dict)
+
             new_employer = Employer(
                 employer_id=employer["id"],
                 name=employer["name"],
                 url=employer["alternate_url"],
-                vacancies=employer["employer_vacancies"],
+                vacancies=vacancies,
             )
             employers_list.append(new_employer)
 

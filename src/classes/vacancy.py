@@ -41,13 +41,6 @@ class Vacancy:
         Создаёт объект Vacancy.
         """
 
-        # Валидация данных
-        if not name:
-            raise ValueError("Название вакансии не может быть пустым")
-
-        if not alternate_url.startswith("http"):
-            raise ValueError("Некорректный URL вакансии")
-
         self.name = name
         self.salary = self.set_salary(salary, rates_dict)
         self.avg_salary = self.calculate_avg_salary()
@@ -166,6 +159,19 @@ class Vacancy:
             f"Ссылка: {self.alternate_url}\n"
         )
 
+
+    def to_dict(self) -> dict:
+        """Преобразует объект Vacancy в словарь для сериализации"""
+        return {
+            "name": self.name,
+            "salary": self.salary,
+            "has_test": self.has_test,
+            "experience": {"name": self.experience},
+            "snippet": {"requirement": self.requirement},
+            "employer": {"name": self.employer},
+            "alternate_url": self.alternate_url,
+        }
+
     @staticmethod
     def cast_to_object_list(vacancy_list_input: list[dict], rates_dict: dict) -> list:
         """
@@ -193,15 +199,3 @@ class Vacancy:
             vacancy_list_output.append(vacancy)
 
         return vacancy_list_output
-
-    def to_dict(self) -> dict:
-        """Преобразует объект Vacancy в словарь для сериализации"""
-        return {
-            "name": self.name,
-            "salary": self.salary,
-            "has_test": self.has_test,
-            "experience": {"name": self.experience},
-            "snippet": {"requirement": self.requirement},
-            "employer": {"name": self.employer},
-            "alternate_url": self.alternate_url,
-        }

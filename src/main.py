@@ -29,9 +29,9 @@ rates_data = RatesAPI.load_rates_data("current_rates.json")
 
 # employers = HeadHunterAPI().get_list_of_employers(['Банк ВТБ', 'VK', 'DNS', 'IBS', 'Adict', 'HeadHunter'])
 employers = HeadHunterAPI().get_list_of_employers(["IBS"])
-employers_list = Employer.cast_to_object_list(employers)
+employers_list = Employer.cast_to_object_list(employers, rates_data)
 
-
+print(employers_list[0].vacancies[0])
 # for i in employers_list:
 #     print(i)
 #     # print(i.vacancies)
