@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import psycopg2
 from dotenv import load_dotenv
+from pandas import DataFrame
 from psycopg2._psycopg import connection
 
 from src.classes.employer import Employer
@@ -101,8 +102,10 @@ class DBManager:
                         cur.execute(insert_query, (employer.employer_id, employer.name, employer.url))
 
                         for vacancy in employer.vacancies:
-                            insert_query = ("INSERT INTO vacancies (name, has_test, experience, requirements, "
-                                            "employer_id, url, avg_salary) VALUES (%s, %s, %s, %s, %s, %s, %s)")
+                            insert_query = (
+                                "INSERT INTO vacancies (name, has_test, experience, requirements, "
+                                "employer_id, url, avg_salary) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+                            )
                             cur.execute(
                                 insert_query,
                                 (
@@ -120,7 +123,7 @@ class DBManager:
         finally:
             conn.close()
 
-    def get_companies_and_vacancies_count(self) -> None:
+    def get_companies_and_vacancies_count(self) -> DataFrame:
         """Запрос получения списка компаний и количества открытых вакансий в каждой компании."""
         # Создание подключения
         conn = self.__get_connection_data()
@@ -130,23 +133,26 @@ class DBManager:
                 with conn.cursor() as cur:
                     # SQL запросы ниже:
 
-                    cur.execute("""
+                    cur.execute(
+                        """
                         SELECT DISTINCT(e.name), COUNT(v.name)
                         FROM employers e
                         JOIN vacancies v ON e.employer_id = v.employer_id
                         GROUP BY e.name
-                        """)
+                        """
+                    )
                     conn.commit()
 
                     data = cur.fetchall()
 
                     dataframe = pd.DataFrame(data, columns=["company_name", "vacancies"])
                     print(dataframe)
+                    return dataframe
 
         finally:
             conn.close()
 
-    def get_all_vacancies(self) -> None:
+    def get_all_vacancies(self) -> DataFrame:
         """Запрос получения списка открытых вакансий во всех компаниях."""
         # Создание подключения
         conn = self.__get_connection_data()
@@ -168,10 +174,11 @@ class DBManager:
                     data = cur.fetchall()
                     dataframe = pd.DataFrame(data, columns=["employer_name", "vacancy_name", "avg_salary", "url"])
                     print(dataframe)
+                    return dataframe
         finally:
             conn.close()
 
-    def get_avg_salary(self) -> None:
+    def get_avg_salary(self) -> DataFrame:
         """Запрос получения средней зарплаты по всем вакансиях во всех компаниях."""
         # Создание подключения
         conn = self.__get_connection_data()
@@ -191,11 +198,15 @@ class DBManager:
                     conn.commit()
 
                     data = cur.fetchone()
-                    print(f"Средняя зарплата по всем вакансием с указанным уровнем заработной платы: {round(data[0])}")
+
+                    dataframe = pd.DataFrame(data, columns=["average_salary"])
+                    print(dataframe)
+                    return dataframe
+
         finally:
             conn.close()
 
-    def get_vacancies_with_higher_salary(self) -> None:
+    def get_vacancies_with_higher_salary(self) -> DataFrame:
         """Запрос получения вакансий с уровнем зароботной платы выше
         чем средняя зарплата по всем вакансиях во всех компаниях."""
         # Создание подключения
@@ -232,10 +243,11 @@ class DBManager:
                         ],
                     )
                     print(dataframe)
+                    return dataframe
         finally:
             conn.close()
 
-    def get_vacancies_with_keyword(self, keyword: str) -> None:
+    def get_vacancies_with_keyword(self, keyword: str) -> DataFrame:
         """Запрос получения вакансий в названии которых есть указанное слово."""
         # Создание подключения
         conn = self.__get_connection_data()
@@ -269,5 +281,6 @@ class DBManager:
                         ],
                     )
                     print(dataframe)
+                    return dataframe
         finally:
             conn.close()

@@ -52,7 +52,7 @@ class Vacancy:
         return currency_value
 
     @staticmethod
-    def update_currency_value(value, currency, rates_data: dict) -> float:
+    def update_currency_value(value: int | float, currency: str, rates_data: dict) -> float:
 
         if currency != "RUB":
             rates = RatesAPI().get_currency_rate(currency, rates_data)
@@ -61,7 +61,7 @@ class Vacancy:
             return value
 
     @staticmethod
-    def calculate_avg_salary(salary_from, salary_to) -> float | int:
+    def calculate_avg_salary(salary_from: str | float | int, salary_to: str | float | int) -> float | int:
         if salary_from != "Не указано" and salary_to != "Не указано":
             return (salary_from + salary_to) / 2
 
