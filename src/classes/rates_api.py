@@ -1,9 +1,9 @@
 import json
 import os
-import requests
-
 from pathlib import Path
 from typing import Any
+
+import requests
 
 
 class RatesAPI:

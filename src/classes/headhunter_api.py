@@ -1,8 +1,11 @@
 import json
+import sys
+import time
 from typing import Any
 
 import Levenshtein
 import requests
+from tqdm import tqdm
 
 
 # Исправить код ниже
@@ -88,15 +91,20 @@ class HeadHunterAPI:
             Список вакансий по этому работадателю.
         """
 
-        api_parameters = {"employer_id": employer_id, "per_page": 10, "page": 0}
+        api_parameters = {"employer_id": employer_id, "per_page": 50, "page": 0}
 
         # Список вакансий по ключевому слову
         vacancies_list = []
 
-        while api_parameters["page"] != 2:
+        while api_parameters["page"] != 50:
             vacancies = self.__connect_to_api(api=self.__API_VACANCIES_URL, api_parameters=api_parameters)
-            vacancies_list.extend(vacancies)
-            api_parameters["page"] += 1
+
+            if len(vacancies) > 0:
+                vacancies_list.extend(vacancies)
+                api_parameters["page"] += 1
+                time.sleep(1)
+            else:
+                break
 
         return vacancies_list
 
@@ -112,9 +120,12 @@ class HeadHunterAPI:
         """
         employers = []
 
+        pbar = tqdm(employers_name_list, desc="Обработка", ascii=True, file=sys.stderr)
         for employer_name in employers_name_list:
+            pbar.set_description(f"Загрузка вакансий от: {employer_name}")
             employer = self.get_employer(employer_name)
             if employer:
                 employers.append(employer)
+            pbar.update(1)
 
         return employers

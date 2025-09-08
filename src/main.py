@@ -1,6 +1,6 @@
 # Точка входа пользователя
-import json
 
+from src.classes.db_manager import DBManager
 from src.classes.employer import Employer
 from src.classes.headhunter_api import HeadHunterAPI
 from src.classes.rates_api import RatesAPI
@@ -27,15 +27,19 @@ from src.classes.rates_api import RatesAPI
 rates_data = RatesAPI.load_rates_data("current_rates.json")
 
 
-# employers = HeadHunterAPI().get_list_of_employers(['Банк ВТБ', 'VK', 'DNS', 'IBS', 'Adict', 'HeadHunter'])
-employers = HeadHunterAPI().get_list_of_employers(["IBS"])
-employers_list = Employer.cast_to_object_list(employers, rates_data)
+# employers = HeadHunterAPI().get_list_of_employers(['Банк ВТБ', 'VK', 'DNS', 'IBS', 'Adict', 'HeadHunter', 'Первый Бит','АРС', '2GIS', 'Далее', 'T1 Иннотех', 'Контур', 'ИНК', 'Слата'])
+# employers = HeadHunterAPI().get_list_of_employers(["VK", "DNS"])
+# employers_list = Employer.cast_to_object_list(employers, rates_data)
 
-print(employers_list[0].vacancies[0])
-# for i in employers_list:
-#     print(i)
-#     # print(i.vacancies)
-#     for j in i.vacancies:
-#         print(j['name'])
-#
-#     print(' \n\n')
+
+
+# Добавить данные
+# DBManager().create_employers_database()
+# DBManager().create_vacancies_database()
+# DBManager().insert_employers(employers_list)
+
+# DBManager().get_companies_and_vacancies_count()
+# DBManager().get_all_vacancies()
+# DBManager().get_avg_salary()
+# DBManager().get_vacancies_with_higher_salary()
+DBManager().get_vacancies_with_keyword("python")

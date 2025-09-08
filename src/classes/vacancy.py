@@ -1,5 +1,3 @@
-from typing import Any
-
 from src.classes.rates_api import RatesAPI
 
 # Создать класс для работы с вакансиями. В этом классе самостоятельно определить атрибуты,
@@ -16,14 +14,13 @@ class Vacancy:
 
     __slots__ = (
         "name",
-        "salary",
+        "salary_info",
         "has_test",
         "experience",
-        "requirement",
+        "requirements",
         "employer",
         "alternate_url",
-        "avg_salary",
-        "rates_dict",
+        "rates_data",
     )
 
     def __init__(
@@ -31,85 +28,103 @@ class Vacancy:
         name: str,
         salary: None | dict,
         employer: str,
-        requirement: str,
+        requirements: str,
         experience: str,
         has_test: bool,
         alternate_url: str,
-        rates_dict: dict,
+        rates_data: dict,
     ) -> None:
         """
         Создаёт объект Vacancy.
         """
-
         self.name = name
-        self.salary = self.set_salary(salary, rates_dict)
-        self.avg_salary = self.calculate_avg_salary()
-        self.requirement = self.remove_from_requirement(requirement)
+        self.salary_info = self.update_salary_info(salary, rates_data)
+        self.requirements = self.remove_from_requirements(requirements)
         self.has_test = has_test
         self.experience = experience
         self.employer = employer
         self.alternate_url = alternate_url
 
     @staticmethod
-    def set_salary(salary: dict | None, rates_dict: dict) -> dict:
-        """
-        Задаёт словарь с информацией по заработной плате.
-
-        Args:
-            salary: Словарь с информацией по заработной плате.
-            rates_dict: Словарь с информацией по курсу валют для правильного перевода в рубли.
-        Returns:
-            Обновлённый словарь с информацией по заработной плате.
-        """
-
-        if isinstance(salary, dict):
-            salary_from = salary.get("from") or 0
-            salary_to = salary.get("to") or 0
-            currency = salary.get("currency") if salary.get("currency") != "RUR" else "RUB"
-
-            if currency != "RUB":
-                rates = RatesAPI().get_currency_rate(currency, rates_dict)
-                salary_from *= rates
-                salary_to *= rates
-
-            currency_salary = {"from": round(salary_from), "to": round(salary_to), "currency": "RUB"}
-            return currency_salary
-
-        else:
-            currency_salary = {"from": 0, "to": 0, "currency": "RUB"}
-
-        return currency_salary
+    def get_salary_currency(currency: str) -> str:
+        currency_exeptions = {"RUR": "RUB", "BYR": "BYN"}
+        currency_value = currency if currency not in currency_exeptions else currency_exeptions[currency]
+        return currency_value
 
     @staticmethod
-    def remove_from_requirement(requirement: str) -> str:
+    def update_currency_value(value, currency, rates_data: dict) -> float:
+
+        if currency != "RUB":
+            rates = RatesAPI().get_currency_rate(currency, rates_data)
+            return value * rates
+        else:
+            return value
+
+    @staticmethod
+    def calculate_avg_salary(salary_from, salary_to) -> float | int:
+        if salary_from != "Не указано" and salary_to != "Не указано":
+            return (salary_from + salary_to) / 2
+
+        elif salary_from == "Не указано" and salary_to != "Не указано":
+            return salary_to
+
+        elif salary_to == "Не указано" and salary_from != "Не указано":
+            return salary_from
+        else:
+            return 0.0
+
+    def update_salary_info(self, salary: None | dict, rates_data: dict):
+        """
+        Обновление информации по заработной плате: границы зарплаты, валюта и средний уровень зарплаты.
+
+        Args:
+            salary: Исходный словарь с информацией по заработной плате.
+            rates_data: Набор данных по текущему курсу валют в пересчёте на российские рубли.
+        Returns:
+            Словарь с информацией по заработной плате.
+        """
+
+        salary_info = {"from": 0, "to": 0, "currency": "RUB", "average": 0.0}
+
+        if isinstance(salary, dict):
+            # Получаем правильное кодовое значение валюты
+            salary_info["currency"] = self.get_salary_currency(salary["currency"])
+
+            # Получаем скорректированное на валюту уровень зарплаты "с .. "
+            if isinstance(salary.get("from"), int):
+                salary_info["from"] = self.update_currency_value(
+                    salary.get("from"), salary_info["currency"], rates_data
+                )
+            else:
+                salary_info["from"] = "Не указано"
+
+            # Получаем скорректированное на валюту уровень зарплаты ".. до"
+            if isinstance(salary.get("to"), int):
+                salary_info["to"] = self.update_currency_value(salary.get("to"), salary_info["currency"], rates_data)
+            else:
+                salary_info["to"] = "Не указано"
+
+            # Получаем среднюю зарлпату
+            salary_info["average"] = self.calculate_avg_salary(salary_info["from"], salary_info["to"])
+
+            return salary_info
+        else:
+            return {"from": "Не указано", "to": "Не указано", "currency": "RUB", "average": 0.0}
+
+    @staticmethod
+    def remove_from_requirements(requirements: str) -> str:
         """
         Очистка строки требований от HTML тегов после обращения к API.
 
         Args:
-            requirement: Ключевое слово, по которому будет проводиться поиск вакансий.
+            requirements: Ключевое слово, по которому будет проводиться поиск вакансий.
         Returns:
             Строка требований.
         """
-        requirement = "" if not requirement else requirement
-        new_requirement = requirement.replace("<highlighttext>", "")
+        requirements = "" if not requirements else requirements
+        new_requirement = requirements.replace("<highlighttext>", "")
         new_requirement = new_requirement.replace("</highlighttext>", "")
         return new_requirement
-
-    def calculate_avg_salary(self) -> float | None | Any:
-        """Рассчитывает среднюю зарплату для сравнений"""
-
-        salary_from = float(self.salary.get("from"))
-        salary_to = float(self.salary.get("to"))
-
-        if salary_from != 0 and salary_to != 0:
-            return (salary_from + salary_to) / 2
-
-        if salary_from == 0:
-            return salary_to
-
-        if salary_to == 0:
-            return salary_from
-        return None
 
     def get_salary_info(self) -> str:
         """
@@ -118,25 +133,7 @@ class Vacancy:
         Returns:
             Форматированная информация о зарплате.
         """
-
-        salary_from = float(self.salary.get("from"))
-        salary_to = float(self.salary.get("to"))
-
-        if salary_from + salary_to == 0:
-            return "Не указана"
-
-        currency = self.salary.get("currency")
-
-        # Обработка различных вариантов
-        if salary_from != 0 and salary_to != 0 and salary_from != salary_to:
-            return f"{salary_from} - {salary_to} {currency}"
-
-        if salary_from == 0:
-            return f"до {salary_to} {currency}"
-
-        if salary_to == 0:
-            return f"от {salary_from} {currency}"
-        return "Не указана"
+        return f"{self.salary_info['from']} - {self.salary_info['to']} {self.salary_info['currency']}"
 
     def __str__(self) -> str:
         """
@@ -153,21 +150,20 @@ class Vacancy:
             f"Вакансия: {self.name}\n"
             f"Зарплата: {salary_info}\n"
             f"Компания: {self.employer}\n"
-            f"Требования: {self.requirement[:140]}\n"
+            f"Требования: {self.requirements[:140]}\n"
             f"Опыт работы: {self.experience}\n"
             f"Тестовое задание: {has_test_info}\n"
             f"Ссылка: {self.alternate_url}\n"
         )
 
-
     def to_dict(self) -> dict:
         """Преобразует объект Vacancy в словарь для сериализации"""
         return {
             "name": self.name,
-            "salary": self.salary,
+            "salary": self.salary_info,
             "has_test": self.has_test,
             "experience": {"name": self.experience},
-            "snippet": {"requirement": self.requirement},
+            "snippet": {"requirement": self.requirements},
             "employer": {"name": self.employer},
             "alternate_url": self.alternate_url,
         }

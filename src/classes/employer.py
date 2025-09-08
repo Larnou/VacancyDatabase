@@ -54,5 +54,4 @@ class Employer:
         Returns:
             Строковое представление работадателя.
         """
-
         return f"Employer(id={self.employer_id}, name={self.name}, url={self.url}, vacancies={len(self.vacancies)})"
