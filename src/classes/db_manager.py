@@ -257,13 +257,14 @@ class DBManager:
                     # SQL запросы ниже:
 
                     cur.execute(
-                        f"""
+                        """
                         SELECT e.name, v.name, v.avg_salary, v.has_test, v.experience, v.requirements, v.url
                         FROM vacancies v
                         JOIN employers e on e.employer_id = v.employer_id
-                        WHERE v.name LIKE '%{keyword}%'
+                        WHERE v.name LIKE %s
                         ORDER BY v.avg_salary DESC;
-                    """
+                        """,
+                        (f"%{keyword}%",)  # Передаем параметр как кортеж
                     )
                     conn.commit()
 

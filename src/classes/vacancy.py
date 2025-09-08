@@ -104,6 +104,7 @@ class Vacancy:
             else:
                 salary_info["to"] = "Не указано"
 
+            salary_info["currency"] = 'RUB'
             # Получаем среднюю зарлпату
             salary_info["average"] = self.calculate_avg_salary(salary_info["from"], salary_info["to"])
 

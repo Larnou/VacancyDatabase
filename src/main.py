@@ -16,7 +16,7 @@ def download_data_to_database() -> None:
     # Получение данных о курсе валют, для корректного перевода и сравнение вакансий в компаниях.
     rates_data = RatesAPI.load_rates_data("current_rates.json")
 
-    employers_names = input("\nВведите интересные вам вакансии через запятую: ").split(',')
+    employers_names = input("\nВведите интересные вам вакансии через запятую: ").split(",")
     # employers_names = ['Банк ВТБ', 'VK', 'DNS', 'IBS', 'Adict', 'HeadHunter', 'Первый Бит', 'АРС',
     #                    '2GIS', 'Далее', 'T1 Иннотех', 'Контур', 'ИНК', 'Слата']
     employers_names = [x.strip() for x in employers_names]
@@ -24,13 +24,13 @@ def download_data_to_database() -> None:
     employers = HeadHunterAPI().get_list_of_employers(employers_names)
     employers_list = Employer.cast_to_object_list(employers, rates_data)
 
-    print('\nИнформация по работадателям и вакансиям готова. Начинается загрузка в Базу Данных')
+    print("\nИнформация по работадателям и вакансиям готова. Начинается загрузка в Базу Данных")
     # Заполнение данных в БД
     DBManager().create_employers_database()
-    print('Таблица для работадателей создана!')
+    print("Таблица для работадателей создана!")
 
     DBManager().create_vacancies_database()
-    print('Таблица для вакансий создана!')
+    print("Таблица для вакансий создана!")
 
     DBManager().insert_employers(employers_list)
     print('\nДанные успешно загружены. Для работы выберите вариант: "2. Загрузить данные из базы данных"')
@@ -49,7 +49,7 @@ def save_data_to_file(data: pd.DataFrame) -> None:
 
         if choice == "1":
             filename = input("Введите название файла: ")
-            FileManager.save_to_json(data, filename + '.json')
+            FileManager.save_to_json(data, filename + ".json")
             break
 
         elif choice == "2":
