@@ -5,6 +5,9 @@ import pandas as pd
 
 
 class FileManager:
+    """
+    Класс FileManager, позволяет обеспечить сохранение результатов запроса из БД в файлы формата название.json.
+    """
 
     @staticmethod
     def save_to_json(sql_data: pd.DataFrame, filename: str) -> None:

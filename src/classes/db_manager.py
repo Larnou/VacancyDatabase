@@ -10,6 +10,11 @@ from src.classes.employer import Employer
 
 
 class DBManager:
+    """
+    Класс DBManager, позволяет реализовать подключение к базе данных,
+    созданием необходимых таблиц, добавление данных и использование SQL-запросов к базе данных PostgreSQL.
+    """
+
 
     @staticmethod
     def __get_connection_data() -> connection:
