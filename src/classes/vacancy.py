@@ -1,3 +1,5 @@
+from typing import Any
+
 from src.classes.rates_api import RatesAPI
 
 # Создать класс для работы с вакансиями. В этом классе самостоятельно определить атрибуты,
@@ -9,7 +11,6 @@ from src.classes.rates_api import RatesAPI
 class Vacancy:
     """
     Класс Vacancy, позволяет хранить информацию о вакансии в удобном виде.
-    Обеспечивает возможность сравнения вакансий по средней зарабной плате.
     """
 
     __slots__ = (
@@ -47,12 +48,33 @@ class Vacancy:
 
     @staticmethod
     def get_salary_currency(currency: str) -> str:
+        """
+        Обновляет кодовое значение валюты в соотвествии с общепринятым форматом.
+
+        Args:
+            currency: Кодовое значение валюты из HeadHunter.
+
+        Returns:
+            Правильное кодовое значение валюты.
+        """
+
         currency_exeptions = {"RUR": "RUB", "BYR": "BYN"}
         currency_value = currency if currency not in currency_exeptions else currency_exeptions[currency]
         return currency_value
 
     @staticmethod
     def update_currency_value(value: int | float, currency: str, rates_data: dict) -> float:
+        """
+        Обновляет значение зароботной платы в соотвествии с курсом валюты.
+
+        Args:
+            value: Значение валюты.
+            currency: Кодовое значение валюты.
+            rates_data: Словарь с информацией по курсу валют.
+
+        Returns:
+            Значение заработной валюты с учётом курса валют.
+        """
 
         if currency != "RUB":
             rates = RatesAPI().get_currency_rate(currency, rates_data)
@@ -62,6 +84,17 @@ class Vacancy:
 
     @staticmethod
     def calculate_avg_salary(salary_from: str | float | int, salary_to: str | float | int) -> float | int:
+        """
+        Обновляет значение зароботной платы в соотвествии с курсом валюты.
+
+        Args:
+            salary_from: Нижняя граница заработной платы.
+            salary_to: Верхняя граница заработной платы.
+
+        Returns:
+            Значение средней заработной платы исходя из двух крайних значений.
+        """
+
         if salary_from != "Не указано" and salary_to != "Не указано":
             return (salary_from + salary_to) / 2
 
@@ -73,7 +106,7 @@ class Vacancy:
         else:
             return 0.0
 
-    def update_salary_info(self, salary: None | dict, rates_data: dict):
+    def update_salary_info(self, salary: None | dict, rates_data: dict) -> dict[str, Any]:
         """
         Обновление информации по заработной плате: границы зарплаты, валюта и средний уровень зарплаты.
 
@@ -120,7 +153,7 @@ class Vacancy:
         Args:
             requirements: Ключевое слово, по которому будет проводиться поиск вакансий.
         Returns:
-            Строка требований.
+            Отформатированная строка требований без HTML-тегов.
         """
         requirements = "" if not requirements else requirements
         new_requirement = requirements.replace("<highlighttext>", "")
@@ -158,7 +191,12 @@ class Vacancy:
         )
 
     def to_dict(self) -> dict:
-        """Преобразует объект Vacancy в словарь для сериализации"""
+        """
+        Преобразует объект Vacancy в словарь для сериализации
+
+        Returns:
+            Представление данных по вакансии в виде словаря.
+        """
         return {
             "name": self.name,
             "salary": self.salary_info,

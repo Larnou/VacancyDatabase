@@ -129,7 +129,12 @@ class DBManager:
             conn.close()
 
     def get_companies_and_vacancies_count(self) -> DataFrame:
-        """Запрос получения списка компаний и количества открытых вакансий в каждой компании."""
+        """
+        Запрос получения списка компаний и количества открытых вакансий в каждой компании.
+
+        Returns:
+            DataFrame с результатами запроса.
+        """
         # Создание подключения
         conn = self.__get_connection_data()
 
@@ -158,7 +163,12 @@ class DBManager:
             conn.close()
 
     def get_all_vacancies(self) -> DataFrame:
-        """Запрос получения списка открытых вакансий во всех компаниях."""
+        """
+        Запрос получения списка открытых вакансий во всех компаниях.
+
+        Returns:
+            DataFrame с результатами запроса.
+        """
         # Создание подключения
         conn = self.__get_connection_data()
 
@@ -184,7 +194,12 @@ class DBManager:
             conn.close()
 
     def get_avg_salary(self) -> DataFrame:
-        """Запрос получения средней зарплаты по всем вакансиях во всех компаниях."""
+        """
+        Запрос получения средней зарплаты по всем вакансиях во всех компаниях.
+
+        Returns:
+            DataFrame с результатами запроса.
+        """
         # Создание подключения
         conn = self.__get_connection_data()
 
@@ -212,8 +227,13 @@ class DBManager:
             conn.close()
 
     def get_vacancies_with_higher_salary(self) -> DataFrame:
-        """Запрос получения вакансий с уровнем зароботной платы выше
-        чем средняя зарплата по всем вакансиях во всех компаниях."""
+        """
+        Запрос получения вакансий с уровнем зароботной платы выше
+        чем средняя зарплата по всем вакансиях во всех компаниях.
+
+        Returns:
+            DataFrame с результатами запроса.
+        """
         # Создание подключения
         conn = self.__get_connection_data()
         try:
@@ -253,7 +273,15 @@ class DBManager:
             conn.close()
 
     def get_vacancies_with_keyword(self, keyword: str) -> DataFrame:
-        """Запрос получения вакансий в названии которых есть указанное слово."""
+        """
+        Запрос получения вакансий в названии которых есть указанное слово.
+
+        Args:
+            keyword: Ключевое слово в названии вакансии.
+
+        Returns:
+            DataFrame с результатами запроса.
+        """
         # Создание подключения
         conn = self.__get_connection_data()
         try:
